@@ -14,8 +14,9 @@ import {
   ValidateIf,
   ValidatorConstraint,
   ValidatorConstraintInterface,
+  IsNumber,
 } from 'class-validator';
-import { MA_GIAM } from '../schema/billPromotion.schema';
+import { MA_GIAM } from './billPromotion.schema';
 
 // ✅ Custom Validator: Kiểm tra ngayKetThuc_MG > ngayBatDau_MG
 @ValidatorConstraint({ name: 'isEndDateValid', async: false })
@@ -68,12 +69,6 @@ export class MaGiamDTO {
   giaTriToiThieu_MG: number; // Giá trị tối thiểu hóa đơn
 
   @IsInt()
-  @Min(1000)
-  @Max(120000000)
-  @IsOptional()
-  mucGiamToiDa_MG?: number; // Mức giảm tối đa (nếu có)
-
-  @IsInt()
   @Min(1)
   @Max(99)
   @IsOptional()
@@ -91,11 +86,8 @@ export class MaGiamDTO {
   @Max(10)
   gioiHanLuotDung_MG: number; // Giới hạn lượt sử dụng trên mỗi người dùng
 
-  @IsBoolean()
-  maVanChuyen_MG: boolean; // Mã giảm giá vận chuyển
-
-  @IsBoolean()
-  maHoaDon_MG: boolean; // Mã giảm giá hóa đơn
+  @IsNumber()
+  loaiMa_MG: number; // Mã giảm giá vận chuyển
 }
 
 export const MA_GIAMSchema = SchemaFactory.createForClass(MA_GIAM);
