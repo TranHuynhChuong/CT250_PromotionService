@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { BillPromotionModule } from './promotion/bill/billPromotion.module';
+import { ProductPromotionModule } from './promotion/product/productPromotion.module';
+import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -18,7 +20,9 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
         return { uri };
       },
     }),
-    CloudinaryModule,
+    BillPromotionModule,
+    ProductPromotionModule,
+    RedisModule,
   ],
   controllers: [],
   providers: [],
