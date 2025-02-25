@@ -136,7 +136,6 @@ export class BillPromotionService {
 
       // Lưu cập nhật vào database
       const savedVoucher = await voucher.save();
-      console.log(savedVoucher);
       vouchers.push(savedVoucher);
     }
     if (hoanLai) {

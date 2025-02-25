@@ -102,4 +102,14 @@ export class KhuyenMaiController {
       true
     );
   }
+
+  @MessagePattern('test1')
+  test(
+    @Payload()
+    payload: {
+      data: string;
+    }
+  ) {
+    return payload.data;
+  }
 }
