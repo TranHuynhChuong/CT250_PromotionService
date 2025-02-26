@@ -1,4 +1,3 @@
-import { Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
@@ -16,7 +15,6 @@ import {
   ValidatorConstraintInterface,
   IsNumber,
 } from 'class-validator';
-import { MA_GIAM } from './billPromotion.schema';
 
 // ✅ Custom Validator: Kiểm tra ngayKetThuc_MG > ngayBatDau_MG
 @ValidatorConstraint({ name: 'isEndDateValid', async: false })
@@ -33,10 +31,6 @@ export class IsEndDateValid implements ValidatorConstraintInterface {
     return 'ngayKetThuc_MG phải lớn hơn ngayBatDau_MG';
   }
 }
-
-@Schema({
-  timestamps: { createdAt: 'ngayTao_MG', updatedAt: 'ngayCapNhat_MG' },
-})
 export class MaGiamDTO {
   @IsString()
   @IsNotEmpty()
@@ -89,5 +83,3 @@ export class MaGiamDTO {
   @IsNumber()
   loaiMa_MG: number; // Mã giảm giá vận chuyển
 }
-
-export const MA_GIAMSchema = SchemaFactory.createForClass(MA_GIAM);

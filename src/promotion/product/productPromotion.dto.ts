@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { PartialType } from '@nestjs/mapped-types';
 //import { Transform } from 'class-transformer';
 import {

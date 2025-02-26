@@ -1,12 +1,3 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-} from '@nestjs/common';
 import { KhuyenMaiService } from './productPromotion.service';
 import {
   CreateKhuyenMaiDto,
@@ -16,58 +7,96 @@ import {
 } from './productPromotion.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-@Controller('product-promotion')
 export class KhuyenMaiController {
   constructor(private readonly khuyenMaiService: KhuyenMaiService) {}
 
-  // Tạo khuyến mãi
-  @Post()
-  async createKhuyenMai(
-    @Body('khuyenMai') khuyenMaiDto: CreateKhuyenMaiDto,
-    @Body('chiTietKhuyenMai') chiTietKhuyenMaiDto: CreateChiTietKhuyenMaiDto[]
+  @MessagePattern('product-promotion_create')
+  async create(
+    @Payload()
+    payload: {
+      khuyenMaiDto: CreateKhuyenMaiDto;
+      chiTietKhuyenMaiDto: CreateChiTietKhuyenMaiDto[];
+    }
   ) {
-    return this.khuyenMaiService.create(khuyenMaiDto, chiTietKhuyenMaiDto);
+    return this.khuyenMaiService.create(
+      payload.khuyenMaiDto,
+      payload.chiTietKhuyenMaiDto
+    );
   }
 
-  // Lấy khuyến mãi có hiệu lực cho sản phẩm
-  @Get('product/:id')
-  async findUsablePromotionOfProduct(
-    @Param('id') idSanPham: string
-  ): Promise<any> {
-    return this.khuyenMaiService.getUsablePromotionOfProduct(idSanPham);
-  }
-
-  // Lấy tất cả khuyến mãi
-  @Get()
-  async findAll() {
-    return this.khuyenMaiService.getAll();
-  }
-
-  @Get('products')
-  async getProductsOfUsablePromotion() {
-    return this.khuyenMaiService.getProductsOfUsablePromotion();
-  }
-
-  // Lấy chi tiết khuyến mãi theo ID
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.khuyenMaiService.find(id);
-  }
-
-  // Cập nhật khuyến mãi theo ID
-  @Put(':id')
+  @MessagePattern('product-promotion_update')
   async update(
-    @Param('id') id: string,
-    @Body('khuyenMai') khuyenMaiDto: UpdateKhuyenMaiDto,
-    @Body('chiTietKhuyenMai') chiTietKhuyenMaiDto: UpdateChiTietKhuyenMaiDto[]
+    @Payload()
+    payload: {
+      idKhuyenMai: string;
+      khuyenMaiDto: UpdateKhuyenMaiDto;
+      chiTietKhuyenMaiDto: UpdateChiTietKhuyenMaiDto[];
+    }
   ) {
-    return this.khuyenMaiService.update(id, khuyenMaiDto, chiTietKhuyenMaiDto);
+    return this.khuyenMaiService.update(
+      payload.idKhuyenMai,
+      payload.khuyenMaiDto,
+      payload.chiTietKhuyenMaiDto
+    );
   }
 
-  // Xóa khuyến mãi theo ID
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.khuyenMaiService.delete(id);
+  @MessagePattern('product-promotion_delete')
+  async delete(
+    @Payload()
+    payload: {
+      idKhuyenMai: string;
+    }
+  ) {
+    return this.khuyenMaiService.delete(payload.idKhuyenMai);
+  }
+
+  @MessagePattern('product-promotion_get-active-promotions-by-productId')
+  async getActivePromotionsByProductId(
+    @Payload()
+    payload: {
+      idSanPham: string;
+    }
+  ) {
+    return this.khuyenMaiService.getActiveByProductId(payload.idSanPham);
+  }
+
+  @MessagePattern('product-promotion_get-active-promotions-by-productIds')
+  async getActivePromotionsByProductIds(
+    @Payload()
+    payload: {
+      idSanPham: string[];
+    }
+  ) {
+    return this.khuyenMaiService.getActiveByProductIds(payload.idSanPham);
+  }
+
+  @MessagePattern('product-promotion_get-products-in-promotion')
+  async getProductsInPromotion(
+    @Payload()
+    payload: {
+      idKhuyenMai: string;
+    }
+  ) {
+    return this.khuyenMaiService.getProducts(payload.idKhuyenMai);
+  }
+
+  @MessagePattern('product-promotion_get-active-promotions')
+  async getActivePromotions() {
+    return this.khuyenMaiService.getAllActive();
+  }
+
+  @MessagePattern('product-promotion_find')
+  async find(
+    @Payload()
+    payload: {
+      id: string;
+    }
+  ) {
+    if (payload.id) {
+      return this.khuyenMaiService.findOne(payload.id);
+    } else {
+      return this.khuyenMaiService.getAll();
+    }
   }
 
   @MessagePattern('giam_san_pham_khuyen_mai')
@@ -101,15 +130,5 @@ export class KhuyenMaiController {
       payload.dsSP,
       true
     );
-  }
-
-  @MessagePattern('test1')
-  test(
-    @Payload()
-    payload: {
-      data: string;
-    }
-  ) {
-    return payload.data;
   }
 }
