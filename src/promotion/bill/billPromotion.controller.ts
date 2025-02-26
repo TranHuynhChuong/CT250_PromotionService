@@ -1,27 +1,17 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-} from '@nestjs/common';
 import { BillPromotionService } from './billPromotion.service';
 import { MaGiamDTO } from './billPromotion.dto';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 
-@Controller('bill-promotion')
 export class BillPromotionController {
   constructor(private readonly billPromotionService: BillPromotionService) {}
 
-  @Get('user/:id')
-  async findAll(@Param('id') idKhachhang: string) {
+  @MessagePattern('bill-promotion_find-usable-user')
+  async findUsable(@Payload() idKhachhang: string) {
     return this.billPromotionService.findUsable(idKhachhang);
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
+  @MessagePattern('bill-promotion_find')
+  async find(@Payload() id: string) {
     if (id) {
       return this.billPromotionService.findOne(id);
     } else {
@@ -29,47 +19,36 @@ export class BillPromotionController {
     }
   }
 
-  @Post()
-  async create(@Body() dto: MaGiamDTO) {
+  @MessagePattern('bill-promotion_create')
+  async create(@Payload() dto: MaGiamDTO) {
     return this.billPromotionService.create(dto);
   }
 
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: Partial<MaGiamDTO>) {
+  @MessagePattern('bill-promotion_update')
+  async update(@Payload() id: string, dto: Partial<MaGiamDTO>) {
     return this.billPromotionService.update(id, dto);
   }
 
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
+  @MessagePattern('bill-promotion_delete')
+  async delete(@Payload() id: string) {
     return this.billPromotionService.delete(id);
   }
 
   @MessagePattern('su_dung_ma_giam')
   async suDungMaGiam(
     @Payload()
-    payload: {
-      idKhachHang: string;
-      dsVoucher: string[];
-    }
+    idKhachHang: string,
+    dsVoucher: string[]
   ) {
-    return this.billPromotionService.usingVoucher(
-      payload.idKhachHang,
-      payload.dsVoucher
-    );
+    return this.billPromotionService.usingVoucher(idKhachHang, dsVoucher);
   }
 
   @MessagePattern('hoan_ma_giam')
   async hoanMaGiam(
     @Payload()
-    payload: {
-      idKhachHang: string;
-      dsVoucher: string[];
-    }
+    idKhachHang: string,
+    dsVoucher: string[]
   ) {
-    return this.billPromotionService.usingVoucher(
-      payload.idKhachHang,
-      payload.dsVoucher,
-      true
-    );
+    return this.billPromotionService.usingVoucher(idKhachHang, dsVoucher, true);
   }
 }
