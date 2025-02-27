@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { KHUYEN_MAI, CHI_TIET_KHUYEN_MAI } from './productPromotion.schema';
@@ -20,7 +24,7 @@ export class KhuyenMaiService {
   async create(
     khuyenMaiDto: CreateKhuyenMaiDto,
     chiTietKhuyenMaiDto: CreateChiTietKhuyenMaiDto[]
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     const session = await this.khuyenMaiModel.startSession();
     session.startTransaction(); // Bắt đầu transaction
 
@@ -33,7 +37,7 @@ export class KhuyenMaiService {
       );
 
       if (existingKM) {
-        throw new NotFoundException('Khuyến mãi đã tồn tại');
+        throw new InternalServerErrorException('Khuyến mãi đã tồn tại');
       }
 
       // Tạo khuyến mãi mới
@@ -67,7 +71,7 @@ export class KhuyenMaiService {
       session.endSession();
       return {
         success: false,
-        error: `Lỗi khi tạo khuyến mãi: ${error.message}`,
+        error: error,
       };
     }
   }
@@ -76,7 +80,7 @@ export class KhuyenMaiService {
     idKhuyenMai: string,
     khuyenMaiDto: UpdateKhuyenMaiDto,
     chiTietKhuyenMaiDto: UpdateChiTietKhuyenMaiDto[]
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     const session = await this.khuyenMaiModel.db.startSession();
     session.startTransaction();
 
@@ -121,14 +125,14 @@ export class KhuyenMaiService {
 
       return {
         success: false,
-        error: error.message,
+        error: error,
       };
     }
   }
 
   async delete(
     idKhuyenMai: string
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     const session = await this.khuyenMaiModel.db.startSession();
     session.startTransaction();
 
@@ -162,7 +166,7 @@ export class KhuyenMaiService {
 
       return {
         success: false,
-        error: error.message,
+        error: error,
       };
     }
   }
@@ -170,7 +174,7 @@ export class KhuyenMaiService {
   async getAllActive(): Promise<{
     success: boolean;
     data?: any;
-    error?: string;
+    error?: any;
   }> {
     try {
       const khuyenMais = await this.khuyenMaiModel.aggregate([
@@ -183,7 +187,6 @@ export class KhuyenMaiService {
           },
         },
       ]);
-
       return {
         success: true,
         data: khuyenMais,
@@ -191,12 +194,12 @@ export class KhuyenMaiService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error,
       };
     }
   }
 
-  async getAll(): Promise<{ success: boolean; data?: any; error?: string }> {
+  async getAll(): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const currentDate = new Date();
 
@@ -216,7 +219,6 @@ export class KhuyenMaiService {
           },
         },
       ]);
-
       return {
         success: true,
         data: khuyenMais,
@@ -224,30 +226,22 @@ export class KhuyenMaiService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error,
       };
     }
   }
 
   async findOne(
     id_KM: string
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       // Tìm khuyến mãi
       const khuyenMai = await this.khuyenMaiModel.findById(id_KM).lean();
-
-      if (!khuyenMai) {
-        return {
-          success: false,
-          error: 'Khuyến mãi không tồn tại',
-        };
-      }
 
       // Tìm tất cả chi tiết khuyến mãi có id_KM tham chiếu đến khuyến mãi
       const chiTietKhuyenMai = await this.chiTietKhuyenMaiModel
         .find({ idKhuyenMai_KM: id_KM }) // Lọc theo id_KM
         .lean();
-
       return {
         success: true,
         data: {
@@ -258,14 +252,14 @@ export class KhuyenMaiService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error,
       };
     }
   }
 
   async getActiveByProductId(
     idSanPham: string
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const currentDate = new Date();
 
@@ -287,7 +281,6 @@ export class KhuyenMaiService {
 
       // Loại bỏ các khuyến mãi không hợp lệ (idKhuyenMai_KM bị null)
       const validPromotions = promotions.filter((p) => p.idKhuyenMai_KM);
-
       return {
         success: true,
         data: validPromotions, // Trả về danh sách khuyến mãi hợp lệ
@@ -295,14 +288,14 @@ export class KhuyenMaiService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error,
       };
     }
   }
 
   async getActiveByProductIds(
     idSanPhams: string[]
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const currentDate = new Date();
 
@@ -324,7 +317,6 @@ export class KhuyenMaiService {
 
       // Loại bỏ các khuyến mãi không hợp lệ (idKhuyenMai_KM bị null)
       const validPromotions = promotions.filter((p) => p.idKhuyenMai_KM);
-
       return {
         success: true,
         data: validPromotions, // Trả về danh sách khuyến mãi hợp lệ
@@ -332,23 +324,27 @@ export class KhuyenMaiService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error,
       };
     }
   }
 
   async getProducts(
     idKhuyenMai: string
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
-    const chiTietKhuyenMai = await this.chiTietKhuyenMaiModel
-      .find({ idKhuyenMai_KM: idKhuyenMai })
-      .select('idSanPham_KM')
-      .lean();
-
-    return {
-      success: true,
-      data: chiTietKhuyenMai.map((item) => item.idSanPham_KM),
-    };
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
+    try {
+      const chiTietKhuyenMai = await this.chiTietKhuyenMaiModel
+        .find({ idKhuyenMai_KM: idKhuyenMai })
+        .select('idSanPham_KM')
+        .lean();
+      const result = chiTietKhuyenMai.map((item) => item.idSanPham_KM);
+      return {
+        success: true,
+        data: result,
+      };
+    } catch (error) {
+      return { success: false, error: error };
+    }
   }
 
   async capNhatSoLuongSanPhamKhuyenMai(
@@ -359,93 +355,97 @@ export class KhuyenMaiService {
       giaMua_CTHD: number;
     }[],
     hoanLai: boolean = false
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
-    if (dsSP.length === 0) {
-      return { success: false, error: 'Danh sách sản phẩm rỗng' };
-    }
-
-    const danhSachIdSanPham = dsSP.map((sp) => sp.idSanPham_CTHD);
-
-    // 🔍 Lấy danh sách khuyến mãi hợp lệ cho các sản phẩm
-    const danhSachKhuyenMai =
-      await this.getActiveByProductIds(danhSachIdSanPham);
-
-    if (!danhSachKhuyenMai.success) {
-      return { success: false, error: danhSachKhuyenMai.error };
-    }
-
-    const promotions = danhSachKhuyenMai.data;
-
-    const newdsSP: {
-      idSanPham_CTHD: string;
-      idTTBanHang_CTHD: string;
-      soLuong_CTHD: number;
-      giaMua_CTHD: number;
-    }[] = [];
-
-    for (const sp of dsSP) {
-      const promotion = promotions.find(
-        (p) => p.idSanPham_KM.toString() === sp.idSanPham_CTHD
-      );
-
-      if (!promotion) {
-        return {
-          success: false,
-          error: `Không tìm thấy khuyến mãi hợp lệ cho sản phẩm ${sp.idSanPham_CTHD}`,
-        };
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
+    try {
+      if (dsSP.length === 0) {
+        throw new NotFoundException('Danh sách sản phẩm rỗng');
       }
 
-      if (!hoanLai) {
-        if (
-          promotion.gioiHanDatHang_KM &&
-          sp.soLuong_CTHD > promotion.gioiHanDatHang_KM
-        ) {
-          return {
-            success: false,
-            error: `Sản phẩm ${sp.idSanPham_CTHD} vượt giới hạn đặt hàng`,
-          };
-        }
+      const danhSachIdSanPham = dsSP.map((sp) => sp.idSanPham_CTHD);
 
-        if (
-          promotion.soLuong_KM <= 0 ||
-          sp.soLuong_CTHD > promotion.soLuong_KM
-        ) {
-          return {
-            success: false,
-            error: `Sản phẩm ${sp.idSanPham_CTHD} không đủ số lượng khuyến mãi`,
-          };
-        }
+      // 🔍 Lấy danh sách khuyến mãi hợp lệ cho các sản phẩm
+      const danhSachKhuyenMai =
+        await this.getActiveByProductIds(danhSachIdSanPham);
 
-        // 🔍 Tính giá bán mới
-        let giaMuaMoi = sp.giaMua_CTHD;
-        if (promotion.tyLeGiam_KM) {
-          giaMuaMoi = sp.giaMua_CTHD * (1 - promotion.tyLeGiam_KM / 100);
-        }
-        if (promotion.mucGiam_KM) {
-          giaMuaMoi = Math.max(giaMuaMoi - promotion.mucGiam_KM, 0); // Chặn giá âm
-        }
-
-        newdsSP.push({
-          idSanPham_CTHD: sp.idSanPham_CTHD,
-          idTTBanHang_CTHD: sp.idTTBanHang_CTHD,
-          soLuong_CTHD: sp.soLuong_CTHD,
-          giaMua_CTHD: giaMuaMoi,
-        });
+      if (!danhSachKhuyenMai.success) {
+        return { success: false, error: danhSachKhuyenMai.error };
       }
-    }
 
-    // 🔄 Cập nhật số lượng sản phẩm trong khuyến mãi
-    const bulkUpdate = dsSP.map((sp) => ({
-      updateOne: {
-        filter: { idSanPham_KM: sp.idSanPham_CTHD },
-        update: {
-          $inc: { soLuong_KM: hoanLai ? sp.soLuong_CTHD : -sp.soLuong_CTHD },
+      const promotions = danhSachKhuyenMai.data;
+
+      const newdsSP: {
+        idSanPham_CTHD: string;
+        idTTBanHang_CTHD: string;
+        soLuong_CTHD: number;
+        giaMua_CTHD: number;
+      }[] = [];
+
+      for (const sp of dsSP) {
+        const promotion = promotions.find(
+          (p) => p.idSanPham_KM.toString() === sp.idSanPham_CTHD
+        );
+
+        if (!promotion) {
+          throw new NotFoundException(
+            `Không tìm thấy khuyến mãi hợp lệ cho sản phẩm ${sp.idSanPham_CTHD}`
+          );
+        }
+
+        if (!hoanLai) {
+          if (
+            promotion.gioiHanDatHang_KM &&
+            sp.soLuong_CTHD > promotion.gioiHanDatHang_KM
+          ) {
+            throw new InternalServerErrorException(
+              `Sản phẩm ${sp.idSanPham_CTHD} vượt giới hạn đặt hàng`
+            );
+          }
+
+          if (
+            promotion.soLuong_KM <= 0 ||
+            sp.soLuong_CTHD > promotion.soLuong_KM
+          ) {
+            throw new InternalServerErrorException(
+              `Sản phẩm ${sp.idSanPham_CTHD} không đủ số lượng khuyến mãi`
+            );
+          }
+
+          // 🔍 Tính giá bán mới
+          let giaMuaMoi = sp.giaMua_CTHD;
+          if (promotion.tyLeGiam_KM) {
+            giaMuaMoi = sp.giaMua_CTHD * (1 - promotion.tyLeGiam_KM / 100);
+          }
+          if (promotion.mucGiam_KM) {
+            giaMuaMoi = Math.max(giaMuaMoi - promotion.mucGiam_KM, 0); // Chặn giá âm
+          }
+
+          newdsSP.push({
+            idSanPham_CTHD: sp.idSanPham_CTHD,
+            idTTBanHang_CTHD: sp.idTTBanHang_CTHD,
+            soLuong_CTHD: sp.soLuong_CTHD,
+            giaMua_CTHD: giaMuaMoi,
+          });
+        }
+      }
+
+      // 🔄 Cập nhật số lượng sản phẩm trong khuyến mãi
+      const bulkUpdate = dsSP.map((sp) => ({
+        updateOne: {
+          filter: { idSanPham_KM: sp.idSanPham_CTHD },
+          update: {
+            $inc: { soLuong_KM: hoanLai ? sp.soLuong_CTHD : -sp.soLuong_CTHD },
+          },
         },
-      },
-    }));
+      }));
 
-    await this.chiTietKhuyenMaiModel.bulkWrite(bulkUpdate);
+      await this.chiTietKhuyenMaiModel.bulkWrite(bulkUpdate);
 
-    return hoanLai ? { success: true } : { success: true, data: newdsSP };
+      return hoanLai ? { success: true } : { success: true, data: newdsSP };
+    } catch (error) {
+      return {
+        success: false,
+        error: error,
+      };
+    }
   }
 }

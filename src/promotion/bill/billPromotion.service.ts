@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MA_GIAM } from './billPromotion.schema';
@@ -10,33 +14,30 @@ export class BillPromotionService {
     @InjectModel(MA_GIAM.name) private readonly maGiamModel: Model<MA_GIAM>
   ) {}
 
-  async findAll(): Promise<{ success: boolean; data?: any; error?: string }> {
+  async findAll(): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const data = await this.maGiamModel.find().exec();
       return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error };
     }
   }
 
   async findOne(
     id: string
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const data = await this.maGiamModel.findById(id).exec();
-      if (!data) {
-        throw new NotFoundException('Mã giảm giá không tồn tại');
-      }
       return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error };
     }
   }
 
   async findActive(): Promise<{
     success: boolean;
     data?: any;
-    error?: string;
+    error?: any;
   }> {
     try {
       const now = new Date();
@@ -48,13 +49,13 @@ export class BillPromotionService {
         .exec();
       return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error };
     }
   }
 
   async findUsable(
     idKhachHang: string
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const now = new Date();
       const activeVouchers = await this.maGiamModel
@@ -73,32 +74,32 @@ export class BillPromotionService {
 
       return { success: true, data: usableVouchers };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error };
     }
   }
 
   async create(
     dto: MaGiamDTO
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const existing = await this.maGiamModel
         .findOne({ ma_MG: dto.ma_MG })
         .exec();
       if (existing) {
-        throw new Error('Mã giảm giá đã tồn tại');
+        throw new InternalServerErrorException('Mã giảm giá đã tồn tại');
       }
       const newMaGiam = new this.maGiamModel(dto);
       const data = await newMaGiam.save();
       return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error };
     }
   }
 
   async update(
     id: string,
     dto: Partial<MaGiamDTO>
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     try {
       const data = await this.maGiamModel
         .findByIdAndUpdate(id, dto, { new: true })
@@ -108,11 +109,11 @@ export class BillPromotionService {
       }
       return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error };
     }
   }
 
-  async delete(id: string): Promise<{ success: boolean; error?: string }> {
+  async delete(id: string): Promise<{ success: boolean; error?: any }> {
     try {
       const result = await this.maGiamModel.findByIdAndDelete(id).exec();
       if (!result) {
@@ -120,7 +121,7 @@ export class BillPromotionService {
       }
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error };
     }
   }
 
@@ -128,7 +129,7 @@ export class BillPromotionService {
     idKhachHang: string,
     dsVoucher: string[],
     hoanLai: boolean = false
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: any; error?: any }> {
     const now = new Date();
     try {
       const vouchers: MA_GIAM[] = [];
